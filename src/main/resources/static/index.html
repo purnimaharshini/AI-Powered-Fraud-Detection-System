@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Detection in Online Transaction</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        (() => {
+            const storageKey = "fraudDetectionTheme";
+            let storedTheme = null;
+            try {
+                storedTheme = localStorage.getItem(storageKey);
+            } catch (error) {
+                storedTheme = null;
+            }
+            const theme = storedTheme === "dark" || storedTheme === "light"
+                ? storedTheme
+                : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.dataset.theme = theme;
+            document.documentElement.style.colorScheme = theme;
+        })();
+    </script>
+    <link rel="stylesheet" href="/css/app.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js" defer></script>
+    <script src="/js/app.js" defer></script>
+</head>
+<body>
+    <div class="page-shell">
+        <button id="themeToggle" class="theme-toggle" type="button" aria-live="polite" aria-label="Switch color theme">
+            <span class="theme-toggle-kicker">Theme</span>
+            <span class="theme-toggle-copy">
+                <strong id="themeToggleCurrent" class="theme-toggle-current">Light</strong>
+                <span id="themeToggleLabel" class="theme-toggle-label">Switch to dark</span>
+            </span>
+        </button>
+        <aside class="ambient ambient-left" aria-hidden="true"></aside>
+        <aside class="ambient ambient-right" aria-hidden="true"></aside>
+
+        <main class="app-frame">
+            <section id="loginView" class="login-view">
+                <div class="brand-card">
+                    <p class="eyebrow">Full-Stack Java Migration</p>
+                    <h1>Fraud Detection in Online Transaction</h1>
+                    <p class="brand-copy">
+                        Monitor customer behavior, investigate suspicious activity, and run fraud scoring
+                        from a single operational dashboard.
+                    </p>
+                    <div class="brand-metrics">
+                        <article>
+                            <span>Signal Layers</span>
+                            <strong>Rules + Model</strong>
+                        </article>
+                        <article>
+                            <span>Backend</span>
+                            <strong>Spring Boot + MySQL</strong>
+                        </article>
+                        <article>
+                            <span>Frontend</span>
+                            <strong>HTML, CSS, JS</strong>
+                        </article>
+                    </div>
+                </div>
+
+                <div class="login-card">
+                    <div class="card-head">
+                        <p class="eyebrow">Secure Access</p>
+                        <h2>Operations Sign In</h2>
+                    </div>
+                    <div class="auth-switch" role="tablist" aria-label="Authentication modes">
+                        <button id="loginModeButton" class="auth-mode-btn is-active" type="button" data-auth-mode="login" aria-selected="true">
+                            Sign In
+                        </button>
+                        <button id="signupModeButton" class="auth-mode-btn" type="button" data-auth-mode="signup" aria-selected="false">
+                            Create Account
+                        </button>
+                    </div>
+                    <form id="loginForm" class="login-form">
+                        <label>
+                            <span>Username or Email</span>
+                            <input id="username" name="username" type="text" autocomplete="username" placeholder="alice or alice@example.com" required>
+                        </label>
+                        <label>
+                            <span>Password</span>
+                            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter password" required>
+                        </label>
+                        <button type="submit" class="primary-btn">Sign In</button>
+                    </form>
+                    <p id="loginError" class="form-error" hidden></p>
+                    <form id="signupForm" class="login-form" hidden>
+                        <label>
+                            <span>Username</span>
+                            <input id="signupUsername" name="username" type="text" autocomplete="username" placeholder="Choose a username" required>
+                        </label>
+                        <label>
+                            <span>Email</span>
+                            <input id="signupEmail" name="email" type="email" autocomplete="email" placeholder="name@example.com" required>
+                        </label>
+                        <label>
+                            <span>Notification Email</span>
+                            <input id="signupNotificationEmail" name="notificationEmail" type="email" autocomplete="email" placeholder="Optional. Defaults to your sign-in email">
+                        </label>
+                        <label>
+                            <span>Password</span>
+                            <input id="signupPassword" name="password" type="password" autocomplete="new-password" placeholder="Minimum 8 characters" required>
+                        </label>
+                        <label>
+                            <span>Confirm Password</span>
+                            <input id="signupConfirmPassword" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter password" required>
+                        </label>
+                        <button type="submit" class="primary-btn">Create Account</button>
+                    </form>
+                    <p id="signupError" class="form-error" hidden></p>
+                    <p class="helper-copy">Accounts are stored in MySQL. Fraud alerts are emailed to the notification address saved on the user profile.</p>
+                </div>
+            </section>
+
+            <section id="dashboardView" class="dashboard-view" hidden>
+                <header class="topbar">
+                    <div>
+                        <p class="eyebrow">Fraud Operations Console</p>
+                        <h1>Fraud Detection in Online Transaction</h1>
+                    </div>
+                    <div class="topbar-actions">
+                        <div class="status-badge">
+                            <span class="status-dot"></span>
+                            <span id="sessionUser">Operator</span>
+                        </div>
+                        <button id="logoutButton" class="ghost-btn" type="button">Logout</button>
+                    </div>
+                </header>
+
+                <section class="hero-panel">
+                    <div>
+                        <p id="heroKicker" class="hero-kicker">Customer-centric fraud monitoring</p>
+                        <h2 id="heroHeadline">Track anomalies, behavior shifts, and live fraud risk without leaving the dashboard.</h2>
+                        <p id="heroSummary" class="hero-summary">
+                            Switch between overview, visual analysis, and investigation workspaces without losing your active filters.
+                        </p>
+                    </div>
+                    <div class="hero-strip">
+                        <article>
+                            <span>Detection Coverage</span>
+                            <strong id="datasetRange">Loading...</strong>
+                        </article>
+                        <article>
+                            <span>Selected Customer</span>
+                            <strong id="selectedCustomerBadge">-</strong>
+                        </article>
+                        <article>
+                            <span>Risk Model</span>
+                            <strong>Java-native inference</strong>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="profile-panel card">
+                    <div class="profile-panel-copy">
+                        <p class="eyebrow">Alert Delivery</p>
+                        <h3>Notification Email Settings</h3>
+                        <p class="profile-copy">
+                            Fraud alerts are routed to the notification email on your account. Update it here without restarting the app or changing environment variables.
+                        </p>
+                    </div>
+                    <div class="profile-panel-body">
+                        <div class="profile-meta-grid">
+                            <article class="profile-meta-item">
+                                <span>Signed-In User</span>
+                                <strong id="profileUsername">-</strong>
+                            </article>
+                            <article class="profile-meta-item">
+                                <span>Login Email</span>
+                                <strong id="profileAccountEmail">-</strong>
+                            </article>
+                            <article class="profile-meta-item">
+                                <span>Active Alert Recipient</span>
+                                <strong id="profileNotificationEmail">-</strong>
+                            </article>
+                        </div>
+                        <form id="notificationEmailForm" class="profile-form">
+                            <label>
+                                <span>Notification Email</span>
+                                <input id="notificationEmailInput" name="notificationEmail" type="email" autocomplete="email" placeholder="alerts@example.com" required>
+                            </label>
+                            <div class="button-row">
+                                <button type="submit" class="primary-btn">Save Notification Email</button>
+                            </div>
+                            <p id="notificationEmailFeedback" class="form-feedback" hidden></p>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="page-nav card" aria-label="Dashboard workspace navigation">
+                    <div class="page-nav-copy">
+                        <p class="eyebrow">Workspace Pages</p>
+                        <h3 id="pageNavTitle">Overview workspace</h3>
+                        <p id="pageNavSummary">
+                            Review KPI movement, behavior signals, and the current fraud verdict before drilling deeper.
+                        </p>
+                    </div>
+                    <div class="page-nav-actions" role="tablist" aria-label="Dashboard pages">
+                        <button id="overviewPageButton" class="page-nav-btn is-active" type="button" data-page="overview" role="tab" aria-selected="true" aria-controls="overviewPage">
+                            Overview
+                        </button>
+                        <button id="visualizationsPageButton" class="page-nav-btn" type="button" data-page="visualizations" role="tab" aria-selected="false" aria-controls="visualizationsPage">
+                            Visualizations
+                        </button>
+                        <button id="investigationPageButton" class="page-nav-btn" type="button" data-page="investigation" role="tab" aria-selected="false" aria-controls="investigationPage">
+                            Investigation
+                        </button>
+                    </div>
+                </section>
+
+                <div class="dashboard-grid">
+                    <aside class="filters-panel card">
+                        <div class="section-title">
+                            <p class="eyebrow">Filters</p>
+                            <h3>Dashboard Controls</h3>
+                        </div>
+                        <form id="filterForm" class="filter-form">
+                            <label>
+                                <span>Customer ID</span>
+                                <select id="customerId" name="customerId"></select>
+                            </label>
+                            <div class="field-row">
+                                <label>
+                                    <span>Start Date</span>
+                                    <input id="startDate" name="startDate" type="date">
+                                </label>
+                                <label>
+                                    <span>End Date</span>
+                                    <input id="endDate" name="endDate" type="date">
+                                </label>
+                            </div>
+                            <label>
+                                <span>Transaction Type</span>
+                                <select id="transactionType" name="transactionType"></select>
+                            </label>
+                            <label>
+                                <span>Location</span>
+                                <select id="location" name="location"></select>
+                            </label>
+                            <label>
+                                <span>Device</span>
+                                <select id="device" name="device"></select>
+                            </label>
+                            <div class="button-row">
+                                <button type="submit" class="primary-btn">Apply Filters</button>
+                                <button id="resetFilters" type="button" class="ghost-btn">Reset</button>
+                            </div>
+                        </form>
+                        <div class="mini-note">
+                            Filters stay pinned while the active page updates KPIs, charts, evidence, and fraud scoring context.
+                        </div>
+                    </aside>
+
+                    <section class="main-panel">
+                        <div class="dashboard-pages">
+                            <section id="overviewPage" class="dashboard-page" role="tabpanel" aria-labelledby="overviewPageButton">
+                                <article class="page-banner card">
+                                    <p class="eyebrow">Overview Page</p>
+                                    <h3>Operational monitoring and behavior context</h3>
+                                    <p>Keep the KPI summary, risk verdict, and supporting signals together while you monitor the selected customer window.</p>
+                                </article>
+
+                                <div class="kpi-grid">
+                                    <article class="metric-card card">
+                                        <span>Total Transactions</span>
+                                        <strong id="metricTotalTransactions">0</strong>
+                                        <small>Observed in selected window</small>
+                                    </article>
+                                    <article class="metric-card card">
+                                        <span>Total Debit</span>
+                                        <strong id="metricTotalDebit">Rs 0</strong>
+                                        <small>Outgoing value</small>
+                                    </article>
+                                    <article class="metric-card card">
+                                        <span>Total Credit</span>
+                                        <strong id="metricTotalCredit">Rs 0</strong>
+                                        <small>Incoming value</small>
+                                    </article>
+                                    <article class="metric-card card">
+                                        <span>Average Amount</span>
+                                        <strong id="metricAverageAmount">Rs 0</strong>
+                                        <small>Mean ticket size</small>
+                                    </article>
+                                    <article class="metric-card card">
+                                        <span>Max Transaction</span>
+                                        <strong id="metricMaxTransaction">Rs 0</strong>
+                                        <small>Largest observed amount</small>
+                                    </article>
+                                    <article class="metric-card card">
+                                        <span>Suspicious Count</span>
+                                        <strong id="metricSuspiciousCount">0</strong>
+                                        <small>Known suspicious records</small>
+                                    </article>
+                                    <article class="metric-card card">
+                                        <span>Suspicious Percentage</span>
+                                        <strong id="metricSuspiciousPercentage">0%</strong>
+                                        <small>Share of risky transactions</small>
+                                    </article>
+                                    <article class="metric-card card">
+                                        <span>Primary Device</span>
+                                        <strong id="metricPrimaryDevice">-</strong>
+                                        <small>Main interaction channel</small>
+                                    </article>
+                                </div>
+								<div id="takeoverAlertBox" style="
+								    display:none;
+								    background:#ffe6e6;
+								    color:#b30000;
+								    padding:12px;
+								    border-radius:8px;
+								    margin-bottom:10px;
+								    font-weight:bold;">
+								</div>
+                                <section class="insight-grid">
+                                    <article class="risk-card card">
+                                        <div class="section-title">
+                                            <p class="eyebrow">Risk Verdict</p>
+                                            <h3 id="riskVerdictLabel">Awaiting data</h3>
+                                        </div>
+                                        <p id="riskVerdictSummary" class="risk-summary">
+                                            Load a customer profile to evaluate suspicious behavior and anomaly pressure.
+                                        </p>
+                                        <div id="riskVerdictBadge" class="risk-badge risk-neutral">No verdict</div>
+                                        <ul id="riskIndicators" class="indicator-list"></ul>
+                                    </article>
+
+                                    <article class="support-card card">
+                                        <div class="section-title">
+                                            <p class="eyebrow">Behavior Signals</p>
+                                            <h3>Supporting Context</h3>
+                                        </div>
+                                        <div class="support-grid">
+                                            <div>
+                                                <span>Primary Location</span>
+                                                <strong id="metricPrimaryLocation">-</strong>
+                                            </div>
+                                            <div>
+                                                <span>Variance Alert</span>
+                                                <strong id="metricVarianceAlert">Stable</strong>
+                                            </div>
+                                            <div>
+                                                <span>Risk Score</span>
+                                                <strong id="metricRiskScore">0 / 100</strong>
+                                            </div>
+                                            <div>
+                                                <span>Current View</span>
+                                                <strong id="metricWindowLabel">-</strong>
+                                            </div>
+                                        </div>
+                                    </article>
+                                </section>
+                            </section>
+
+                            <section id="visualizationsPage" class="dashboard-page" role="tabpanel" aria-labelledby="visualizationsPageButton" hidden>
+                                <article class="page-banner card">
+                                    <p class="eyebrow">Visualizations Page</p>
+                                    <h3>Charts dedicated to trend, spread, and activity analysis</h3>
+                                    <p>Timeline, distribution, location, merchant, and heatmap visuals now live in one focused analytics page.</p>
+                                </article>
+
+                                <section class="chart-grid">
+                                    <article class="chart-card card chart-wide">
+                                        <div class="section-title">
+                                            <p class="eyebrow">Timeline</p>
+                                            <h3>Transaction Volume Over Time</h3>
+                                        </div>
+                                        <p class="chart-note">Adaptive range view with suspicious transactions highlighted in coral.</p>
+                                        <div class="chart-frame chart-frame-timeline">
+                                            <canvas id="timelineChart" aria-label="Transaction timeline chart"></canvas>
+                                        </div>
+                                    </article>
+
+                                    <article class="chart-card card">
+                                        <div class="section-title">
+                                            <p class="eyebrow">Distribution</p>
+                                            <h3>Amount Histogram</h3>
+                                        </div>
+                                        <div class="chart-frame chart-frame-compact">
+                                            <canvas id="amountChart" aria-label="Amount distribution chart"></canvas>
+                                        </div>
+                                    </article>
+
+                                    <article class="chart-card card">
+                                        <div class="section-title">
+                                            <p class="eyebrow">Location</p>
+                                            <h3>Transactions by Location</h3>
+                                        </div>
+                                        <div class="chart-frame chart-frame-compact">
+                                            <canvas id="locationChart" aria-label="Location chart"></canvas>
+                                        </div>
+                                    </article>
+
+                                    <article class="chart-card card">
+                                        <div class="section-title">
+                                            <p class="eyebrow">Merchants</p>
+                                            <h3>Merchant Category Mix</h3>
+                                        </div>
+                                        <div class="chart-frame chart-frame-compact">
+                                            <canvas id="categoryChart" aria-label="Category chart"></canvas>
+                                        </div>
+                                    </article>
+
+                                    <article class="chart-card card chart-wide">
+                                        <div class="section-title">
+                                            <p class="eyebrow">Heatmap</p>
+                                            <h3>Weekday and Hour Activity Map</h3>
+                                        </div>
+                                        <div id="heatmap" class="heatmap"></div>
+                                    </article>
+                                </section>
+                            </section>
+
+                            <section id="investigationPage" class="dashboard-page" role="tabpanel" aria-labelledby="investigationPageButton" hidden>
+                                <article class="page-banner card">
+                                    <p class="eyebrow">Investigation Page</p>
+                                    <h3>Review evidence and run live prediction in one workflow</h3>
+                                    <p>The evidence table and fraud scoring form are grouped together for faster case triage and simulation.</p>
+                                </article>
+
+                                <section class="bottom-grid">
+                                    <article class="table-card card evidence-card">
+                                        <div class="section-title">
+                                            <p class="eyebrow">Evidence</p>
+                                            <h3>Recent Suspicious Transactions</h3>
+                                        </div>
+                                        <p class="table-copy">A compact evidence trail for recent flagged or high-interest activity in the current filter window.</p>
+                                        <div class="table-wrap">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Transaction ID</th>
+                                                        <th>Timestamp</th>
+                                                        <th>Amount</th>
+                                                        <th>Type</th>
+                                                        <th>Location</th>
+                                                        <th>Device</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="transactionsTable"></tbody>
+                                            </table>
+                                        </div>
+                                    </article>
+
+                                    <article class="prediction-card card prediction-shell">
+                                        <div class="section-title">
+                                            <p class="eyebrow">Prediction</p>
+                                            <h3>Live Fraud Scoring</h3>
+                                        </div>
+                                        <p class="prediction-copy">Simulate a new transaction profile and inspect how the Java fraud model responds.</p>
+                                        <form id="predictionForm" class="prediction-form">
+                                            <div class="field-row">
+                                                <label>
+                                                    <span>Amount</span>
+                                                    <input name="amount" type="number" min="0" step="0.01" value="1000" required>
+                                                </label>
+                                                <label>
+                                                    <span>Transaction Type</span>
+                                                    <select name="transactionType" id="predictionTransactionType"></select>
+                                                </label>
+                                            </div>
+                                            <div class="field-row">
+                                                <label>
+                                                    <span>Channel</span>
+                                                    <select name="channel" id="predictionChannel"></select>
+                                                </label>
+                                                <label>
+                                                    <span>Customer Age</span>
+                                                    <input name="customerAge" type="number" min="18" max="100" value="30" required>
+                                                </label>
+                                            </div>
+                                            <div class="field-row">
+                                                <label>
+                                                    <span>Occupation</span>
+                                                    <select name="customerOccupation" id="predictionOccupation"></select>
+                                                </label>
+                                                <label>
+                                                    <span>Transaction Duration (sec)</span>
+                                                    <input name="transactionDuration" type="number" min="1" value="60" required>
+                                                </label>
+                                            </div>
+                                            <div class="field-row">
+                                                <label>
+                                                    <span>Login Attempts</span>
+                                                    <input name="loginAttempts" type="number" min="1" max="10" value="1" required>
+                                                </label>
+                                                <label>
+                                                    <span>Account Balance</span>
+                                                    <input name="accountBalance" type="number" min="0" step="0.01" value="5000" required>
+                                                </label>
+                                            </div>
+                                            <button type="submit" class="primary-btn">Run Fraud Scoring</button>
+                                        </form>
+                                        <div id="predictionResult" class="prediction-result prediction-idle">
+                                            <div class="prediction-meter">
+                                                <div id="predictionMeterFill" class="prediction-meter-fill"></div>
+                                            </div>
+                                            <div class="prediction-summary">
+                                                <h4 id="predictionLabel">Awaiting input</h4>
+                                                <p id="predictionProbability">Risk score will appear here.</p>
+                                            </div>
+                                            <ul id="predictionFactors" class="factor-list"></ul>
+                                        </div>
+                                    </article>
+                                </section>
+                            </section>
+                        </div>
+                    </section>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="fraudAlertModal" class="alert-modal" aria-hidden="true" hidden>
+        <div id="fraudAlertDialog" class="alert-modal-panel card" role="alertdialog" aria-modal="true" aria-labelledby="fraudAlertTitle" aria-describedby="fraudAlertMessage" tabindex="-1">
+            <p class="alert-modal-kicker">Fraud Alert</p>
+            <h2 id="fraudAlertTitle">Fraud detected</h2>
+            <p id="fraudAlertMessage" class="alert-modal-copy">A suspicious transaction profile was predicted.</p>
+            <div class="alert-modal-metrics">
+                <article>
+                    <span>Fraud Probability</span>
+                    <strong id="fraudAlertProbability">0.0%</strong>
+                </article>
+                <article>
+                    <span>Risk Score</span>
+                    <strong id="fraudAlertRiskScore">0 / 100</strong>
+                </article>
+            </div>
+            <p id="fraudAlertNotification" class="alert-modal-note">Alert delivery details will appear here.</p>
+            <ul id="fraudAlertFactors" class="alert-factor-list"></ul>
+            <div class="button-row">
+                <button id="fraudAlertCloseButton" class="primary-btn" type="button">Acknowledge Alert</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+</body>
+</html>
