@@ -1,8 +1,8 @@
-# Fraud Detection in Online Transaction
+# 🛡️Fraud Detection in Online Transaction
 
 This project migrates the original Python Streamlit prototype into a full-stack Java application using Spring Boot, MySQL, and a frontend built with HTML, CSS, and JavaScript.
 
-## Stack
+## 🚀 Stack
 
 - Java 21
 - Spring Boot 3
@@ -11,7 +11,7 @@ This project migrates the original Python Streamlit prototype into a full-stack 
 - Vanilla HTML, CSS, and JavaScript
 - Chart.js for dashboard charts
 
-## What Changed
+## 🔄 What Changed
 
 - Replaced the Streamlit app with a Spring Boot web application.
 - Moved transaction analytics into Java services and REST APIs.
@@ -19,13 +19,13 @@ This project migrates the original Python Streamlit prototype into a full-stack 
 - Converted the scikit-learn `fraud_model.pkl` into a Java-readable random forest JSON model.
 - Added a frontend dashboard for login, filters, KPIs, charts, transaction evidence, and fraud prediction.
 
-## Authentication
+## 🔐 Authentication
 
 - Create an account from the landing page using username, email, and password.
 - Credentials are stored in MySQL in the `users` table.
 - Sign-in accepts either the username or the email address.
 
-## Run MySQL
+## 🐬 Run MySQL
 
 ```bash
 docker compose up -d
@@ -33,7 +33,7 @@ docker compose up -d
 
 The included MySQL container is exposed on `localhost:3307` to avoid conflicts with any existing local MySQL service already using `3306`.
 
-## Run the Application
+## ▶️ Run the Application
 
 ```bash
 mvn spring-boot:run
@@ -41,7 +41,7 @@ mvn spring-boot:run
 
 The app will be available at `http://localhost:8080`.
 
-## Environment Variables
+## 🌍 Environment Variables
 
 You can override the default MySQL connection with:
 
@@ -63,7 +63,7 @@ Users can set a dedicated notification email from the app UI. Fraud alerts are s
 
 To send fraud alerts to arbitrary recipients, replace the onboarding sender with an address on a verified domain in your Resend account.
 
-## Project Structure
+## 📁 Project Structure
 
 ```text
 src/main/java/com/frauddetection/online
@@ -73,13 +73,13 @@ src/main/resources/static
 scripts/export_random_forest.py
 ```
 
-## Notes About the Model
+## 🤖 Notes About the Model
 
 - The runtime application no longer depends on Python.
 - `scripts/export_random_forest.py` exports the original scikit-learn random forest into `src/main/resources/model/fraud_model.json`.
 - The Java backend loads that JSON and evaluates the same tree ensemble natively.
 
-## Test
+## 🧪 Test
 
 ```bash
 mvn test
